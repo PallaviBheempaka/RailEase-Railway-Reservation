@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RailEase - Railway Reservation System</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#f4f7fb;color:#222}
+header{background:#12355b;color:white;padding:18px 6%;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.logo{font-size:25px;font-weight:bold}
+nav{display:flex;gap:18px;flex-wrap:wrap}
+nav a{color:white;text-decoration:none;cursor:pointer}
+.hero{min-height:350px;background:linear-gradient(135deg,#12355b,#1976d2);color:white;text-align:center;padding:85px 20px}
+.hero h1{font-size:40px;margin-bottom:15px}
+.hero p{font-size:18px;margin-bottom:25px}
+button{border:0;padding:12px 20px;border-radius:6px;cursor:pointer;font-size:15px}
+.btn{background:#ff9800;color:white}
+.search-btn{background:#1976d2;color:white;margin-top:22px}
+.book-btn{background:#198754;color:white}
+.submit-btn{background:#12355b;color:white}
+.cancel-btn{background:#dc3545;color:white;margin-top:15px}
+.container{width:90%;max-width:1100px;margin:30px auto;background:white;padding:28px;border-radius:10px;box-shadow:0 3px 15px #ddd}
+h2{text-align:center;color:#12355b;margin-bottom:20px}
+input,select{width:100%;padding:12px;border:1px solid #ccc;border-radius:5px;margin-top:7px}
+label{font-weight:bold;display:block;margin-top:8px}
+.search-box,.booking-form,.auth-form{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+.search-box{grid-template-columns:repeat(4,1fr)}
+.full{grid-column:1/-1}
+.train{border:1px solid #ddd;border-radius:8px;padding:20px;margin-top:18px;background:#fafafa}
+.train h3{color:#12355b;margin-bottom:10px}
+.train-info{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:12px 0}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;text-align:center}
+.feature{padding:24px;border-radius:8px;background:#eef5ff}
+.feature h3{color:#12355b;margin:10px}
+.ticket{border:2px dashed #12355b;padding:24px;margin-top:20px;background:#f8fbff}
+.ticket h3{text-align:center;color:#12355b;margin-bottom:18px}
+.ticket p{margin:10px 0}
+.hidden{display:none!important}
+.success{color:green;text-align:center;font-weight:bold;margin-top:15px}
+.error{color:red;margin-top:12px;text-align:center}
+.note{background:#fff8e1;padding:12px;margin:15px 0;line-height:1.5}
+.payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:25px}
+.qr-area{text-align:center;background:#f8fbff;padding:22px;border:1px solid #ddd;border-radius:8px}
+#qrcode{display:flex;justify-content:center;margin:15px auto;min-height:210px;align-items:center}
+#qrcode img{max-width:210px}
+.admin-table{width:100%;border-collapse:collapse;margin-top:15px}
+.admin-table th,.admin-table td{border:1px solid #ddd;padding:10px;text-align:left}
+.admin-table th{background:#eaf2fb}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.stat{background:#eef5ff;padding:18px;border-radius:8px;text-align:center}
+.stat strong{display:block;font-size:25px;color:#12355b;margin-top:8px}
+footer{background:#12355b;color:white;text-align:center;padding:20px;margin-top:40px}
+@media(max-width:750px){
+.search-box,.booking-form,.auth-form,.features,.payment-grid,.stat-grid{grid-template-columns:1fr}
+.hero h1{font-size:30px}
+header{justify-content:center;gap:15px}
+.container{padding:20px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">🚆 RailEase</div>
+<nav>
+<a onclick="showSection('home')">Home</a>
+<a onclick="showSection('search')">Search Trains</a>
+<a onclick="requireLogin('booking')">Book Ticket</a>
+<a onclick="requireLogin('ticket')">My Ticket</a>
+<a onclick="showSection('login')">User Login</a>
+<a onclick="showSection('adminLogin')">Admin</a>
+<a id="logoutLink" class="hidden" onclick="logout()">Logout</a>
+</nav>
+</header>
+
+<!-- HOME PAGE -->
+<section id="home">
+<div class="hero">
+<h1>Online Railway Reservation</h1>
+<p>Search trains and book your journey easily</p>
+<button class="btn" onclick="showSection('search')">Search Trains</button>
+</div>
+
+<div class="container">
+<h2>Why Use RailEase?</h2>
+<div class="features">
+<div class="feature">
+<div style="font-size:38px">🔍</div>
+<h3>Easy Search</h3>
+<p>Find trains quickly.</p>
+</div>
+<div class="feature">
+<div style="font-size:38px">🎫</div>
+<h3>Easy Booking</h3>
+<p>Book railway tickets easily.</p>
+</div>
+<div class="feature">
+<div style="font-size:38px">📱</div>
+<h3>QR Payment</h3>
+<p>Scan the QR code for demo payment.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- USER LOGIN -->
+<section id="login" class="hidden">
+<div class="container" style="max-width:520px">
+<h2>👤 User Login / Register</h2>
+
+<form onsubmit="userLogin(event)">
+<label>Full Name</label>
+<input type="text" id="loginName" required>
+
+<label>Email</label>
+<input type="email" id="loginEmail" required>
+
+<label>Password</label>
+<input type="password" id="loginPassword" minlength="4" required>
+
+<button class="submit-btn" style="width:100%;margin-top:20px">
+Login / Create Account
+</button>
+</form>
+
+<p id="loginMessage"></p>
+</div>
+</section>
+
+<!-- ADMIN LOGIN -->
+<section id="adminLogin" class="hidden">
+<div class="container" style="max-width:520px">
+<h2>🔐 Admin Login</h2>
+
+<form onsubmit="adminLogin(event)">
+<label>Admin Username</label>
+<input type="text" id="adminUser" required>
+
+<label>Password</label>
+<input type="password" id="adminPass" required>
+
+<button class="submit-btn" style="width:100%;margin-top:20px">
+Admin Login
+</button>
+</form>
+
+<div class="note">
+<b>Demo Admin Login</b><br>
+Username: admin<br>
+Password: admin123
+</div>
+
+<p id="adminMessage"></p>
+</div>
+</section>
+
+<!-- SEARCH TRAINS -->
+<section id="search" class="hidden">
+<div class="container">
+<h2>🔍 Search Trains</h2>
+
+<div class="search-box">
+<div>
+<label>From</label>
+<select id="from">
+<option value="">Select Station</option>
+<option>Hyderabad</option>
+<option>Chennai</option>
+<option>Bangalore</option>
+<option>Mumbai</option>
+<option>Delhi</option>
+</select>
+</div>
+
+<div>
+<label>To</label>
+<select id="to">
+<option value="">Select Station</option>
+<option>Hyderabad</option>
+<option>Chennai</option>
+<option>Bangalore</option>
+<option>Mumbai</option>
+<option>Delhi</option>
+</select>
+</div>
+
+<div>
+<label>Journey Date</label>
+<input type="date" id="date">
+</div>
+
+<div>
+<label>Passengers</label>
+<select id="passengers">
+<option>1 Passenger</option>
+<option>2 Passengers</option>
+<option>3 Passengers</option>
+<option>4 Passengers</option>
+</select>
+</div>
+</div>
+
+<button class="search-btn" onclick="searchTrains()">
+Search Available Trains
+</button>
+
+<div id="results"></div>
+</div>
+</section>
+
+<!-- BOOKING PAGE -->
+<section id="booking" class="hidden">
+<div class="container">
+<h2>🎫 Passenger Booking</h2>
+
+<form onsubmit="startPayment(event)">
+<div class="booking-form">
+
+<div>
+<label>Passenger Name</label>
+<input type="text" id="name" required>
+</div>
+
+<div>
+<label>Age</label>
+<input type="number" id="age" min="1" max="120" required>
+</div>
+
+<div>
+<label>Gender</label>
+<select id="gender" required>
+<option value="">Select Gender</option>
+<option>Male</option>
+<option>Female</option>
+<option>Other</option>
+</select>
+</div>
+
+<div>
+<label>Train</label>
+<select id="train" required>
+<option value="">Select Train</option>
+<option>12701 - Hyderabad Express</option>
+<option>12603 - Chennai Express</option>
+<option>16592 - Bangalore Express</option>
+</select>
+</div>
+
+<div>
+<label>Class</label>
+<select id="classType" required>
+<option value="">Select Class</option>
+<option>Sleeper</option>
+<option>AC 3 Tier</option>
+<option>AC 2 Tier</option>
+<option>AC First Class</option>
+</select>
+</div>
+
+<div>
+<label>Journey Date</label>
+<input type="date" id="bookingDate" required>
+</div>
+
+<div class="full">
+<label>Mobile Number</label>
+<input type="tel" id="mobile" pattern="[0-9]{10}" required placeholder="Enter 10 digit mobile number">
+</div>
+
+<div class="full">
+<button class="submit-btn" type="submit">
+Continue to Payment
+</button>
+</div>
+
+</div>
+</form>
+
+<p id="bookingMessage"></p>
+</div>
+</section>
+
+<!-- PAYMENT PAGE -->
+<section id="payment" class="hidden">
+<div class="container">
+<h2>💳 Ticket Payment</h2>
+
+<div class="payment-grid">
+<div>
+<h3>Booking Summary</h3>
+<p id="paymentSummary"></p>
+
+<p style="font-size:22px;margin-top:18px">
+<b>Total Fare: <span id="fareAmount"></span></b>
+</p>
+
+<div class="note">
+<b>Demo Payment Only:</b>
+This QR code is not connected to a bank or UPI account.
+Do not send real money. Real payments require a verified payment gateway.
+</div>
+
+<label style="display:flex;gap:9px;align-items:center;font-weight:normal">
+<input type="checkbox" id="demoPaid" style="width:auto">
+I understand this is a demo payment.
+</label>
+
+<button class="submit-btn" style="margin-top:18px"
+onclick="completeDemoPayment()">
+Confirm Demo Payment
+</button>
+
+<p id="paymentMessage"></p>
+</div>
+
+<div class="qr-area">
+<h3>Scan QR Code</h3>
+<p>Scan to view the demo booking reference.</p>
+<div id="qrcode">QR code will appear here</div>
+<small>Demo reference only - Not a real payment QR.</small>
+</div>
+</div>
+</div>
+</section>
+
+<!-- MY TICKET -->
+<section id="ticket" class="hidden">
+<div class="container">
+<h2>🎟️ My Ticket</h2>
+<div id="ticketDetails">
+<p style="text-align:center">No ticket booked yet.</p>
+</div>
+</div>
+</section>
+
+<!-- ADMIN DASHBOARD -->
+<section id="admin" class="hidden">
+<div class="container">
+<h2>🛠️ Admin Dashboard</h2>
+
+<div class="stat-grid">
+<div class="stat">
+Total Bookings
+<strong id="bookingCount">0</strong>
+</div>
+
+<div class="stat">
+Confirmed Tickets
+<strong id="confirmedCount">0</strong>
+</div>
+
+<div class="stat">
+Cancelled Tickets
+<strong id="cancelledCount">0</strong>
+</div>
+</div>
+
+<h3 style="color:#12355b;margin-top:25px">
+All Booking Records
+</h3>
+
+<div style="overflow-x:auto">
+<table class="admin-table">
+<thead>
+<tr>
+<th>PNR</th>
+<th>Passenger</th>
+<th>Train</th>
+<th>Date</th>
+<th>Fare</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="adminRows">
+<tr><td colspan="6">No bookings available.</td></tr>
+</tbody>
+</table>
+</div>
+
+<button class="cancel-btn" onclick="logout()">Admin Logout</button>
+</div>
+</section>
+
+<footer>
+<p>© 2026 RailEase - Online Railway Reservation System</p>
+<p>Web Technologies Mini Project</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+
+let currentUser = JSON.parse(localStorage.getItem("railEaseUser") || "null");
+let pendingBooking = null;
+let ticket = JSON.parse(localStorage.getItem("railEaseTicket") || "null");
+let bookings = JSON.parse(localStorage.getItem("railEaseBookings") || "[]");
+let isAdmin = false;
+
+/* SHOW SECTIONS */
+
+function showSection(section){
+
+const sections=[
+"home","login","adminLogin","search",
+"booking","payment","ticket","admin"
+];
+
+sections.forEach(id=>{
+document.getElementById(id).classList.add("hidden");
+});
+
+document.getElementById(section).classList.remove("hidden");
+
+document.getElementById("logoutLink").classList.toggle(
+"hidden",!(currentUser || isAdmin)
+);
+
+window.scrollTo({top:0,behavior:"smooth"});
+
+if(section==="ticket") displayTicket();
+if(section==="admin") renderAdmin();
+
+}
+
+/* USER LOGIN */
+
+function requireLogin(section){
+
+if(!currentUser){
+alert("Please login first.");
+showSection("login");
+return;
+}
+
+showSection(section);
+
+}
+
+function userLogin(event){
+
+event.preventDefault();
+
+const user={
+name:document.getElementById("loginName").value.trim(),
+email:document.getElementById("loginEmail").value.trim()
+};
+
+currentUser=user;
+
+localStorage.setItem("railEaseUser",JSON.stringify(user));
+
+document.getElementById("loginMessage").innerHTML=
+"<span class='success'>Login successful! Welcome "+escapeHTML(user.name)+"</span>";
+
+setTimeout(()=>{
+showSection("search");
+},700);
+
+}
+
+/* ADMIN LOGIN */
+
+function adminLogin(event){
+
+event.preventDefault();
+
+const username=document.getElementById("adminUser").value;
+const password=document.getElementById("adminPass").value;
+
+if(username==="admin" && password==="admin123"){
+
+isAdmin=true;
+showSection("admin");
+
+}else{
+
+document.getElementById("adminMessage").innerHTML=
+"<span class='error'>Invalid username or password.</span>";
+
+}
+
+}
+
+/* LOGOUT */
+
+function logout(){
+
+currentUser=null;
+isAdmin=false;
+
+localStorage.removeItem("railEaseUser");
+
+showSection("home");
+
+}
+
+/* HTML SAFETY */
+
+function escapeHTML(value){
+
+return String(value).replace(/[&<>"']/g,ch=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[ch]));
+
+}
+
+/* SEARCH TRAINS */
+
+function searchTrains(){
+
+let from=document.getElementById("from").value;
+let to=document.getElementById("to").value;
+let date=document.getElementById("date").value;
+
+let results=document.getElementById("results");
+
+if(!from || !to || !date){
+
+results.innerHTML="<p class='error'>Please select From, To and Journey Date.</p>";
+return;
+
+}
+
+if(from===to){
+
+results.innerHTML="<p class='error'>From and To stations cannot be same.</p>";
+return;
+
+}
+
+let trains=[
+{name:"12701 - Hyderabad Express",depart:"08:00 AM",arrive:"06:00 PM",seats:45,fare:650},
+{name:"12603 - Chennai Express",depart:"10:30 AM",arrive:"08:30 PM",seats:32,fare:720},
+{name:"16592 - Bangalore Express",depart:"06:30 AM",arrive:"04:30 PM",seats:28,fare:580}
+];
+
+results.innerHTML=trains.map(t=>`
+
+<div class="train">
+
+<h3>🚆 ${t.name}</h3>
+
+<div class="train-info">
+<span><b>From:</b> ${escapeHTML(from)}</span>
+<span><b>To:</b> ${escapeHTML(to)}</span>
+<span><b>Date:</b> ${date}</span>
+<span><b>Departure:</b> ${t.depart}</span>
+<span><b>Arrival:</b> ${t.arrive}</span>
+<span><b>Seats:</b> ${t.seats}</span>
+</div>
+
+<p><b>Fare:</b> ₹${t.fare}</p>
+
+<button class="book-btn"
+onclick="selectTrain('${t.name}',${t.fare})">
+Book Now
+</button>
+
+</div>
+
+`).join("");
+
+}
+
+/* SELECT TRAIN */
+
+function selectTrain(trainName,fare){
+
+if(!currentUser){
+
+alert("Please login first.");
+showSection("login");
+return;
+
+}
+
+document.getElementById("train").value=trainName;
+
+let date=document.getElementById("date").value;
+
+if(date){
+document.getElementById("bookingDate").value=date;
+}
+
+pendingBooking={fare:fare};
+
+showSection("booking");
+
+}
+
+/* START PAYMENT */
+
+function startPayment(event){
+
+event.preventDefault();
+
+if(!currentUser){
+showSection("login");
+return;
+}
+
+let train=document.getElementById("train").value;
+
+let fareMap={
+"12701 - Hyderabad Express":650,
+"12603 - Chennai Express":720,
+"16592 - Bangalore Express":580
+};
+
+pendingBooking={
+
+name:document.getElementById("name").value.trim(),
+age:document.getElementById("age").value,
+gender:document.getElementById("gender").value,
+train:train,
+classType:document.getElementById("classType").value,
+date:document.getElementById("bookingDate").value,
+mobile:document.getElementById("mobile").value,
+fare:fareMap[train]||650,
+status:"Pending"
+
+};
+
+document.getElementById("paymentSummary").innerHTML=
+
+"<b>Passenger:</b> "+escapeHTML(pendingBooking.name)+
+"<br><b>Train:</b> "+escapeHTML(train)+
+"<br><b>Journey Date:</b> "+pendingBooking.date+
+"<br><b>Class:</b> "+escapeHTML(pendingBooking.classType);
+
+document.getElementById("fareAmount").textContent=
+"₹"+pendingBooking.fare;
+
+document.getElementById("demoPaid").checked=false;
+
+document.getElementById("paymentMessage").textContent="";
+
+showSection("payment");
+
+makeQR();
+
+}
+
+/* QR CODE GENERATION */
+
+function makeQR(){
+
+let holder=document.getElementById("qrcode");
+
+holder.innerHTML="";
+
+let data=
+"RAILEASE DEMO ONLY | Passenger: "+
+pendingBooking.name+
+" | Train: "+pendingBooking.train+
+" | Fare: INR "+pendingBooking.fare+
+" | NOT A REAL PAYMENT";
+
+if(window.QRCode){
+
+new QRCode(holder,{
+text:data,
+width:200,
+height:200
+});
+
+}else{
+
+holder.innerHTML="<p>QR library requires internet connection.</p>";
+
+}
+
+}
+
+/* DEMO PAYMENT CONFIRMATION */
+
+function completeDemoPayment(){
+
+if(!pendingBooking){
+alert("No pending booking found.");
+return;
+}
+
+if(!document.getElementById("demoPaid").checked){
+
+document.getElementById("paymentMessage").innerHTML=
+"<span class='error'>Please confirm the demo payment checkbox.</span>";
+
+return;
+
+}
+
+pendingBooking.pnr=
+Math.floor(1000000000+Math.random()*9000000000);
+
+pendingBooking.status="Confirmed";
+
+pendingBooking.userEmail=currentUser.email;
+
+ticket=pendingBooking;
+
+bookings.push(ticket);
+
+localStorage.setItem("railEaseTicket",JSON.stringify(ticket));
+
+localStorage.setItem("railEaseBookings",JSON.stringify(bookings));
+
+document.getElementById("paymentMessage").innerHTML=
+"<span class='success'>Demo payment successful! Ticket confirmed.</span>";
+
+pendingBooking=null;
+
+setTimeout(()=>{
+showSection("ticket");
+},800);
+
+}
+
+/* DISPLAY TICKET */
+
+function displayTicket(){
+
+let box=document.getElementById("ticketDetails");
+
+if(!ticket){
+
+box.innerHTML="<p>No ticket booked yet.</p>";
+return;
+
+}
+
+box.innerHTML=`
+
+<div class="ticket">
+
+<h3>🚆 RAILEASE E-TICKET</h3>
+
+<p><b>PNR Number:</b> ${ticket.pnr}</p>
+
+<p><b>Passenger Name:</b> ${escapeHTML(ticket.name)}</p>
+
+<p><b>Age:</b> ${escapeHTML(ticket.age)}</p>
+
+<p><b>Gender:</b> ${escapeHTML(ticket.gender)}</p>
+
+<p><b>Train:</b> ${escapeHTML(ticket.train)}</p>
+
+<p><b>Journey Date:</b> ${ticket.date}</p>
+
+<p><b>Class:</b> ${escapeHTML(ticket.classType)}</p>
+
+<p><b>Mobile:</b> ${escapeHTML(ticket.mobile)}</p>
+
+<p><b>Fare:</b> ₹${ticket.fare}</p>
+
+<p><b>Status:</b> ${ticket.status}</p>
+
+${ticket.status==="Confirmed"?
+'<button class="cancel-btn" onclick="cancelTicket()">Cancel Ticket</button>':""}
+
+</div>
+
+`;
+
+}
+
+/* CANCEL TICKET */
+
+function cancelTicket(){
+
+if(!ticket || ticket.status!=="Confirmed"){
+
+alert("No active ticket found.");
+return;
+
+}
+
+if(confirm("Are you sure you want to cancel this ticket?")){
+
+ticket.status="Cancelled";
+
+let index=bookings.findIndex(b=>b.pnr===ticket.pnr);
+
+if(index>=0){
+bookings[index].status="Cancelled";
+}
+
+localStorage.setItem("railEaseTicket",JSON.stringify(ticket));
+
+localStorage.setItem("railEaseBookings",JSON.stringify(bookings));
+
+displayTicket();
+
+}
+
+}
+
+/* ADMIN DASHBOARD */
+
+function renderAdmin(){
+
+document.getElementById("bookingCount").textContent=
+bookings.length;
+
+document.getElementById("confirmedCount").textContent=
+bookings.filter(b=>b.status==="Confirmed").length;
+
+document.getElementById("cancelledCount").textContent=
+bookings.filter(b=>b.status==="Cancelled").length;
+
+let rows=document.getElementById("adminRows");
+
+if(!bookings.length){
+
+rows.innerHTML="<tr><td colspan='6'>No bookings available.</td></tr>";
+return;
+
+}
+
+rows.innerHTML=bookings.map(b=>`
+
+<tr>
+<td>${b.pnr}</td>
+<td>${escapeHTML(b.name)}</td>
+<td>${escapeHTML(b.train)}</td>
+<td>${b.date}</td>
+<td>₹${b.fare}</td>
+<td>${b.status}</td>
+</tr>
+
+`).join("");
+
+}
+
+/* INITIAL PAGE */
+
+showSection("home");
+
+</script>
+
+</body>
+</html>
